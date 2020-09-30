@@ -1,18 +1,18 @@
 # 排班逻辑
 ## 加扣班/存假计算逻辑
-数据库表
-[dbo].[rostering_shift_extra_record] -- 加扣班/存假记录表
-主要字段有
-排班用户Id(UnitUserId)
-排班数据Id(PlanItemId)
-类型(Category)
-加扣班时长(OvertimeHours)
-核算成加班的时长(ActualHours)
-核算成存假的时长(StoredVacationHours)
-是否有效(Effective)
-注：核算成加班的时长&核算成存假的时长 都是排班用户实际从此班次获得的，两者没有冲突，可以同时不为0，但不能同时为0(没有意义)<br >
-核算成加班的时长--一般会变成用户的薪资, 核算成存假的时长--一般会变成用户的存假
-unique：PlanItemId-Category
+#### 数据库表
+#### record_shift_extra_record 加扣班/存假记录表
+> #### 主要字段有
+> #### 排班用户Id(UnitUserId)
+> #### 排班数据Id(PlanItemId)
+> #### 类型(Category)
+> #### 加扣班时长(OvertimeHours)
+> #### 核算成加班的时长(ActualHours)
+> #### 核算成存假的时长(StoredVacationHours)
+> #### 是否有效(Effective)
+> #### 注：核算成加班的时长&核算成存假的时长 都是排班用户实际从此班次获得的，两者没有冲突，可以同时不为0，但不能同时为0(没有意义)<br >
+> #### 核算成加班的时长--一般会变成用户的薪资, 核算成存假的时长--一般会变成用户的存假
+> #### unique：PlanItemId-Category
 
 ### 能产生记录的途径，目前有3种
 ### 一、班表在定义时就设置的加班时长和存假时长，排班人排班发布后产生；发布后的排班数据的变更或删除
