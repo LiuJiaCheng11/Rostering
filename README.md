@@ -4,34 +4,36 @@
 #### rostering_shift_extra_record 加扣班/存假记录表
 > #### 主要字段有
 > #### 排班用户Id(UnitUserId)
-> #### 排班数据Id(PlanItemId)
+> #### ObjectId 里面有排班数据Id(PlanItemId)，目前有Overtime${OvertimeId}和PlanItem${PlanItemId}两种格式
 > #### 类型(Category)
 > #### 加扣班时长(OvertimeHours)
 > #### 核算成加班的时长(ActualHours)
 > #### 核算成存假的时长(StoredVacationHours)
 > #### 是否有效(Effective)
+> #### 审批状态(Status)
 > #### 注：核算成加班的时长&核算成存假的时长 都是排班用户实际从此班次获得的，两者没有冲突，可以同时不为0，但不能同时为0(没有意义)<br >
 > #### 核算成加班的时长--一般会变成用户的薪资, 核算成存假的时长--一般会变成用户的存假
-> #### unique：PlanItemId-Category
+> #### 唯一约束:PlanItemId(实际在ObjectId里面)-Category-Effective=true(实际是Status=审批中和审批通过)
 
 ### 能产生记录的途径，目前有3种
 ### 一、班表在定义时就设置的加班时长和存假时长，排班人排班发布后产生；发布后的排班数据的变更或删除
 >> #### 产生和删除的时机：排班人发布班表和撤回班表
->> #### 数据特征：Category=1, OvertimeHours = 0, ActualHours = shift.Overtime, StoredVacationHours = shift.StoredVacation, Effective = 1
+>> #### 数据特征：ObjectId = PlanItem${PlanItemId}, Category = 1, OvertimeHours = 0, ActualHours = shift.Overtime, StoredVacationHours = shift.StoredVacation, Effective = 1, Status = 审批通过
 >> #### 状态变更：无
 
 ### 二、排班安排页面点击的加扣班
 >> #### 产生和删除的时机：排班人加扣班和撤销加扣班；排班数据的变更或删除
->> #### 数据特征：Category=0, OvertimeHours = [加扣班时长], ActualHours = [核算成加班的时长], StoredVacationHours = [核算成存假的时长], Effective = 0(如果当前PlanItem状态为发布后的状态时，则为1)
+>> #### 数据特征：ObjectId = PlanItem${PlanItemId}, Category = 0, OvertimeHours = [加扣班时长], ActualHours = [核算成加班的时长], StoredVacationHours = [核算成存假的时长], Effective = 0(如果当前PlanItem状态为发布后的状态时，则为1), Status = 审批通过
 >> #### 状态变更：排班人发布班表后Effective = 1, 排班人撤回班表后Effective = 0
 >> 注：加扣班时长为用户当天上班时实际加扣班时长，比如早退2小时，加班2小时；现在核算成0.5小时加班和1小时存假。(`注意此公式不成立 OvertimeHours = ActualHours + StoredVacationHours`)
 
 ### 三、排班用户保存加班申请
 >> #### 产生和删除的时机：流程保存加扣班申请；排班数据的变更或删除
->> #### 数据特征：Category=0, OvertimeHours = [申请人填写], ActualHours = [审批人或排班人后续转化], StoredVacationHours = [审批人或排班人后续转化], Effective = 0
->> #### 状态变更：审批通过后且关联的PlanItem为发布后的状态Effective = 1，一般申请时要发布后的PlanItem才是可视的，但可能申请提交后，排班人撤回来了；其他时候Effective = 0
+>> #### 数据特征：ObjectId = Overtime${OvertimeId}, Category = 0, OvertimeHours = [申请人填写], ActualHours = OvertimeHours, StoredVacationHours = 0, Effective = 0, Status = ?
+>> #### 状态变更：审批通过后Effective = 1，且加班申请产生的Record的Effective不受排班数据状态的影响
 
 无论是哪种途径产生的数据，都必须要对应的班表发布后才能生效
+注1：关于唯一约束，主要针对排班人点击加扣班与用户申请加扣班的冲突校验，规定对于一个PlanItem而言，审批中和审批通过的Overtime的Record只有一个。即提交了申请后排班人不能再加扣班，排班人加扣班后不能再提交申请
 
 ## 存假的逻辑
 #### 数据库表
@@ -44,7 +46,7 @@
 > #### 该年已同步到请假模块的总天数的整0.5部分(SyncDays)
 > #### 结转的天数，含小数部分(CarryOverDays)
 > #### 注：每日工作时长不一定是8小时(可能7.5)，换算BalanceHours到Balance时会存在多位小数的情况，最终跑回界面上的数据是保留小数点后两位
-> #### unique：PlanItemId-Category
+> #### 唯一约束：Year-UnitUserId
 
 >> #### 产生的时机：发生第一次的更新，但查询时是left join，故无数据也能查询
 >> #### 更新的时机1：当产生Effective = 1 and StoredVacationHours <> 0 的record_shift_extra_record表的数据时，都会触发相关的积存假计算，计算为统计对应年份的Record的StoredVacationHours加算到StoreVacation的BalanceHours和换算成响应的Balance
