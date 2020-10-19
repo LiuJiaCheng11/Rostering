@@ -28,8 +28,8 @@
 >> 注：加扣班时长为用户当天上班时实际加扣班时长，比如早退2小时，加班2小时；现在核算成0.5小时加班和1小时存假。(`注意此公式不成立 OvertimeHours = ActualHours + StoredVacationHours`)
 
 ### 三、排班用户保存加班申请
->> #### 产生和删除的时机：流程保存加扣班申请；排班数据的变更或删除
->> #### 数据特征：ObjectId = Overtime${OvertimeId}, Category = 0, OvertimeHours = [申请人填写], ActualHours = OvertimeHours, StoredVacationHours = 0, Effective = 0, Status = ?
+>> #### 产生和删除的时机：流程保存加扣班申请；排班数据的删除
+>> #### 数据特征：ObjectId = Overtime${OvertimeId}, Category = 0, OvertimeHours = [申请人填写], ActualHours = [审批人换算], StoredVacationHours = [审批人换算], Effective = 0, Status = ?
 >> #### 状态变更：审批通过后Effective = 1，Status = 审批通过，且加班申请产生的Record的Effective不受排班数据状态的影响
 >> 注：加扣班申请在审批通过之前是不会显示到班表或者加算加扣班时长的，审批通过之后，就会立刻显示到班表且加算加扣班时长
 
