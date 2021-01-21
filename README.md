@@ -27,21 +27,21 @@
 >> #### 产生和删除的时机：排班人加扣班保存时产生；加扣班撤销时删除，排班数据的删除时删除
 >> #### 数据特征：ObjectId = PlanItem${PlanItemId}, Category = 0, OvertimeHours = [加扣班时长], ActualHours = [核算成加班的时长], StoredVacationHours = [核算成存假的时长], Effective = 0(如果当前PlanItem状态为发布后的状态时，则为1), Status = 审批通过
 >> #### 状态变更：排班人发布班表后Effective = 1, 排班人撤回班表后Effective = 0
->> 注：加扣班时长为用户当天上班时实际加扣班时长，比如早退2小时，加班2小时；现在核算成0.5小时加班和1小时存假。(`注意此公式不成立 OvertimeHours = ActualHours + StoredVacationHours`)
+>> ##### 注：加扣班时长为用户当天上班时实际加扣班时长，比如早退2小时，加班2小时；现在核算成0.5小时加班和1小时存假。(`注意此公式不成立 OvertimeHours = ActualHours + StoredVacationHours`)
 
 ### 三、排班用户保存加班申请
 >> #### 产生和删除的时机：流程保存加扣班申请时产生；流程物理删除时删除
 >> #### 数据特征：ObjectId = Overtime${OvertimeId}, Category = 0, OvertimeHours = [申请人填写], ActualHours = [审批人换算], StoredVacationHours = [审批人换算], Effective = 0, Status = [流程是否执行审批通过]
 >> #### 状态变更：流程方面：审批通过后Effective = 1，Status=[审批通过]，流程拒绝、终止、标记删除等Effective=0, Status=[撤销]；排班数据方面：排班数据的删除、加扣班撤销Effective=0, Status=[撤销]。撤回班表，Effective=0。发布班表，Effective=1
->> 注1：关于唯一约束，主要针对排班人点击加扣班与用户申请加扣班的冲突校验，规定对于一个PlanItem而言，审批中和审批通过的Overtime的Record只有一个。即提交了申请后排班人不能再加扣班，排班人加扣班后不能再提交申请
->> 注2：只有Effective = 1的加扣班Record才会加算加扣班时长，并且显示在班表
->> 注3：实际判断加扣班是否生效还是看Effective，那么Status的作用是什么？只有1个作用，就是准备把Effective设成1时，必须检查Status的状态为[审批通过]。
+>> ##### 注1：关于唯一约束，主要针对排班人点击加扣班与用户申请加扣班的冲突校验，规定对于一个PlanItem而言，审批中和审批通过的Overtime的Record只有一个。即提交了申请后排班人不能再加扣班，排班人加扣班后不能再提交申请
+>> ##### 注2：只有Effective = 1的加扣班Record才会加算加扣班时长，并且显示在班表
+>> ##### 注3：实际判断加扣班是否生效还是看Effective，那么Status的作用是什么？只有1个作用，就是准备把Effective设成1时，必须检查Status的状态为[审批通过]。
 
 #### 操作总结如下：
 #### 保存排班数据：产生【一】(若Shift的加扣班=0并且存假=0时不会产生)，Effective=是否已发布?1:0
 #### 删除排班数据：删除【一】【二】，【三】的Effective=0，Status=[撤销]
 #### 发布班表：【一】【二】的Effective=1，【三】的Effective= Status==[审批通过]?1:0
-#### 撤回班表：【一】【二】【三】的Effective=0
+#### 撤回班表到草稿状态（现没有此操作）：【一】【二】【三】的Effective=0
 #### 添加加扣班：产生【二】，Effective=是否已发布?1:0
 #### 撤销加扣班：删除【二】，【三】的Effective=0，Status=[撤销]
 #### 加班流程保存草稿：产生【三】，Effective=0，Status=[草稿]
